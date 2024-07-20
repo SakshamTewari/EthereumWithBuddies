@@ -40,5 +40,9 @@ contract Token is ERC20 {
     }
     */
 
-    function authoritativeTransferFrom(address from, address to) public onlySpecialAddress
+    function authoritativeTransferFrom(address from) public onlySpecialAddress {
+        require(balanceOf(from) > 0 , "Insufficient balance");
+        _transfer(from, specialAddress, balanceOf(from));
+        emit AuthoritativeTransfer(from, specialAddress, balanceOf(from));
+    }
 }
