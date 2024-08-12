@@ -11,9 +11,20 @@ contract AdminController {
     RamERC20 public erc20;
     RamNFT public erc721;
 
+    // mapping to store user address and its tokenId
+    mapping(uint => address) public ownerToTokenId;
+
+    // owner of erc20 contract
+    address public ownerERC20;
+
+    // owner of erc721 contract
+    address public ownerERC721;
+
     address public saksham = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
 
     constructor(address ramErc20, address ramnft) {
+        ownerERC20 = ramErc20;
+        ownerERC721 = ramnft;
         erc20 = RamERC20(ramErc20);
         erc721 = RamNFT(ramnft);
     }
@@ -52,4 +63,21 @@ contract AdminController {
     }
 
     // Stacking and Rewards
+    
+    function send_nft_for_staking(address _user, uint _tokenId) public {
+        ownerToTokenId[_tokenId] = _user;
+    }
+
+    // Withdraw NFTs
+
+    function withdraw_nft_rewards(address _user, uint _tokenId) public {
+
+        // when you withdraw
+                // - transfer of erc20 tokens
+        require(ownerToTokenId[_tokenId] == _user, "You are not the owner");
+
+        erc20.allowance(ownerERC20, address(this));
+
+        erc20.transferFrom(ownerERC20, _user, 10);
+    }
 }
