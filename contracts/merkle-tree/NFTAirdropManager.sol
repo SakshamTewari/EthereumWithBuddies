@@ -42,18 +42,11 @@ contract NFTAirdropManager is Ownable {
     }
 
     function commitMint(uint _salt) external {
-        _commitReveal.commit(createCommit(_salt));
-    }
-
-    function createCommit(
-        uint _salt
-    ) public view returns (bytes32 _commitHash) {
-        _commitHash = keccak256(abi.encodePacked(msg.sender, _salt));
+        _commitReveal.commit(msg.sender, keccak256(abi.encodePacked(msg.sender, _salt)));
     }
 
     function revealCommit(uint _salt) external {
-        bytes32 _commitHash = createCommit(_salt);
-        _commitReveal.reveal(_commitHash);
+        _commitReveal.reveal(msg.sender,_salt);
     }
 
     function claim(bytes32[] calldata _proof, uint _index) external {

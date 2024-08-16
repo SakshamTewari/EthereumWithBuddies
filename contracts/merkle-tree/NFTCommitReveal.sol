@@ -14,31 +14,31 @@ contract NFTCommitReveal {
 
     event Revealed(address indexed user, string mintCode);
 
-    function commit(bytes32 _commitHash) external {
+    function commit(address msgSender, bytes32 _commitHash) external {
         //require(commits[msg.sender] == 0, "Already committed");
-        commits[msg.sender] = _commitHash;
-        reveledBlockDetails[msg.sender] = block.number + 10;
+        commits[msgSender] = _commitHash;
+        reveledBlockDetails[msgSender] = block.number + 1;
         emit CommitMade(
-            msg.sender,
+            msgSender,
             _commitHash,
-            reveledBlockDetails[msg.sender]
+            reveledBlockDetails[msgSender]
         );
     }
 
-    function reveal(bytes32 _commitedHash) external {
-        bool isRevealed = reveledDetails[msg.sender];
+    function reveal(address msgSender, uint _salt) external {
+        bool isRevealed = reveledDetails[msgSender];
         require(!isRevealed, "Already revealed");
 
-        uint revealBlock = reveledBlockDetails[msg.sender];
+        uint revealBlock = reveledBlockDetails[msgSender];
 
         /// Need to identiyf why reavelBlock should be ahead of commit block
         require(block.number >= revealBlock, "Reveal not yet allowed");
 
         // Recreate the hash to verify
-        bytes32 expectedHash = keccak256(abi.encodePacked(_commitedHash));
-        bytes32 actualHash = commits[msg.sender];
+        bytes32 expectedHash = keccak256(abi.encodePacked(msgSender,_salt));
+        bytes32 actualHash = commits[msgSender];
         require(expectedHash == actualHash, "Invalid reveal");
 
-        reveledDetails[msg.sender] = true;
+        reveledDetails[msgSender] = true;
     }
 }

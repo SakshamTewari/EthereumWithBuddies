@@ -15,7 +15,7 @@ contract MusicClipsToken is ERC721, Ownable {
     function safeMint(
         address to,
         uint _nftId
-    ) external onlyOwner returns (uint256) {
+    ) external onlyOwner {
         uint256 newItemId = _tokenIds + 1;
         require(newItemId <= MAX_NO_NFTS, "MAX Nft has been minted");
         _tokenIds = newItemId;
