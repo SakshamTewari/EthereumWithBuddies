@@ -8,13 +8,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MusicClipsToken is ERC721, Ownable {
     // Identify the current token id for recently minted token.
     uint private _tokenIds;
+    uint private MAX_NO_NFTS = 1000;
     constructor() ERC721("RingTones", "RTN") Ownable(msg.sender) {}
 
     // Auto increment the ID and assign a new tokeId to URI once minted.
-    function safeMint(address to) external onlyOwner returns (uint256) {
+    function safeMint(
+        address to,
+        uint _nftId
+    ) external onlyOwner returns (uint256) {
         uint256 newItemId = _tokenIds + 1;
+        require(newItemId <= MAX_NO_NFTS, "MAX Nft has been minted");
         _tokenIds = newItemId;
-        _safeMint(to, newItemId);
-        return newItemId;
+        _safeMint(to, _nftId);
     }
 }

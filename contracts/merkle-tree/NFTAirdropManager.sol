@@ -5,13 +5,14 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./MusicClipsToken.sol";
+import "./NFTCommitReveal.sol";
 
 contract NFTAirdropManager is Ownable {
     /// Libraries decelartions
     using MerkleProof for bytes[];
     using BitMaps for BitMaps.BitMap;
 
-    /// Roothash for state root(Merkle root)
+    /// Root-hash for state root(Merkle root)
     bytes32 public airDropWhiteListMerkleRoot;
 
     /// Track the claim status
@@ -20,9 +21,17 @@ contract NFTAirdropManager is Ownable {
     /// Token - NFT
     MusicClipsToken _nftToken;
 
-    constructor(bytes32 _rootHash, address _nft) Ownable(msg.sender) {
+    /// Commit reavel
+    NFTCommitReveal _commitReveal;
+
+    constructor(
+        bytes32 _rootHash,
+        address _nft,
+        address _commitAddress
+    ) Ownable(msg.sender) {
         airDropWhiteListMerkleRoot = _rootHash;
         _nftToken = MusicClipsToken(_nft);
+        _commitReveal = NFTCommitReveal(_commitAddress);
     }
 
     /// Update root when new address added
@@ -32,16 +41,36 @@ contract NFTAirdropManager is Ownable {
         airDropWhiteListMerkleRoot = _airDropWhiteListMerkleRoot;
     }
 
-    function mint(
-        bytes32[] calldata _proof,
-        uint _index,
-        address _toAddress
-    ) external {
+    function commitMint(uint _salt) external {
+        _commitReveal.commit(createCommit(_salt));
+    }
+
+    function createCommit(
+        uint _salt
+    ) public view returns (bytes32 _commitHash) {
+        _commitHash = keccak256(abi.encodePacked(msg.sender, _salt));
+    }
+
+    function revealCommit(uint _salt) external {
+        bytes32 _commitHash = createCommit(_salt);
+        _commitReveal.reveal(_commitHash);
+    }
+
+    function claim(bytes32[] calldata _proof, uint _index) external {
+        require(
+            _commitReveal.reveledDetails(msg.sender),
+            "Please reveal your commit"
+        );
+
+        bytes32 randomNftId = keccak256(
+            abi.encodePacked(block.prevrandao, block.timestamp)
+        );
+
         /// User has not minted
         require(!_mintedStatus.get(_index), "Address has already minted");
 
         /// Create leaf node from sender's address
-        bytes32 leaf = keccak256(abi.encodePacked(_toAddress));
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
 
         /// Verify the leaf against the Merkle root
         require(
@@ -49,10 +78,10 @@ contract NFTAirdropManager is Ownable {
             "Not a whitelisted address"
         );
 
-        /// Mark as minted
+        /// Mark status as minted
         _mintedStatus.set(_index);
 
         /// Mint the NFT here
-        _nftToken.safeMint(_toAddress);
+        _nftToken.safeMint(msg.sender, uint256(randomNftId));
     }
 }
