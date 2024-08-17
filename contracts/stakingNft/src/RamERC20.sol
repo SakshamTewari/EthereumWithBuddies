@@ -29,10 +29,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract RamERC20 is ERC20 {
 
+    address public owner;
 
     // total supply of 1000 tokens with 18 decimals
     constructor() ERC20("Ram token", "RAM"){
+        owner = msg.sender;
        _mint(msg.sender, 1000e18); // Initial supply of 1,000,000 tokens to the contract deployer
+
     }
 
     function mintToken(address sender, uint256 noOfTokens) public {
