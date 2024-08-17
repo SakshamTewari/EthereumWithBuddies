@@ -76,8 +76,9 @@ contract AdminController {
                 // - transfer of erc20 tokens
         require(ownerToTokenId[_tokenId] == _user, "You are not the owner");
 
-        erc20.allowance(ownerERC20, address(this));
+        // allowance given to AdminController by ERC20 contract owner
+        erc20.allowance(erc20.owner(), address(this));
 
-        erc20.transferFrom(ownerERC20, _user, 10);
+        erc20.transferFrom(erc20.owner(), _user, 10);
     }
 }
